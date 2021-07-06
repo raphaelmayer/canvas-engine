@@ -1,0 +1,101 @@
+# Canvas Game Engine
+A light wrapper around the **browser canvas API** to create (mainly) 2D animations and small games.
+
+I often found myself rewriting lots of canvas boilerplate whenever I had a small idea to implement or toy with.
+So I wrote this very basic engine to be able to quickly play around with stuff.
+
+## Basic Usage
+This is completely free of any dependencies and the engine is contained in a single file ```CanvasEngine.js```..
+
+### Quick Start
+You only require CanvasEngine.js and a html file to get started, but it is preferable to also have a separate main.js file for your javascript code. 
+A minimal setup could look like this assuming all files are in the same directory:
+
+**index.html**
+```
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title></title>
+</head>
+
+<body>
+    <script src="./CanvasEngine.js"></script>
+    <script src="./main.js"></script>
+</body>
+</html>
+```
+
+**main.js**
+```
+// define some important window constants
+const WINDOW_WIDTH = 640;
+const WINDOW_HEIGHT= 480;
+const PIXELSIZE = 10;           // optional, defaults to 1
+
+// initialize new game
+const game = new CanvasEngine("EngineDemo", WINDOW_WIDTH, WINDOW_HEIGHT, PIXELSIZE);
+
+game.onStart = (game) => {      // runs once before the very first frame
+    return true;                // otherwise abort
+}
+
+game.onUpdate = (game) => {     // runs on every frame
+    return true;                // otherwise abort
+}
+
+game.start();                   // start the update loop
+```
+
+See the the documenation below or look into the EXAMPLES folder for more details on how to use this project.
+
+### Initialization
+```CanvasEngine``` requires 3 arguments:
+- title - name of the project
+- window width - the window width in pixels
+- window height - the window height in pixels
+- pixel size (optional) - adjust resolution, **defaults to 1.**
+
+*Note: 1 pixel equals pixel size * pixel size actual pixels.*
+
+```
+const game = new CanvasEngine("EngineDemo", WINDOW_WIDTH, WINDOW_HEIGHT, PIXEL_SIZE);
+```
+
+### Exposed attributes
+The engine additionally provides the following attributes, which can be accessed via ```game.<attribute>```:
+- title
+- windowWidth
+- windowHeight 
+- pixelSize
+- rWidth - the resolution width (i.e. windowWidth / pixelSize)
+- rHeight - the resolution height (i.e. windowHeight / pixelSize)
+- timePreviousFrame - time since the previous frame
+- fps - frames per second
+- (experimental) timeBetweenFrames - add a delay between each frame (in ms); defaults to 0 
+
+These should not be overwritten by the user, once the engine has been initialized. (Might be worth it to make them *private* in the future)
+
+### Listening for User Input
+Listening for input events is handled for you. Listening for key input:
+```
+if (game.keys["w"].pressed || game.keys["w"].held)
+    // do something
+```
+
+Mouse keys follow the same pattern:
+```
+if (game.keys["mouse0"].pressed)    // listen for left mouse click
+    // do something
+```
+The names for mouse keys are:
+mouse0 = left mouse
+mouse1 = middle mouse
+mouse2 = right mouse
+
+Additionally the engine exposes the mouse coordinates via ```game.mouse.x``` and ```game.mouse.y```.
+For now, one must check, whether game.keys["..."] exists. This is subject to change.
+
+*Note: game.keys[(...)].pressed is true for the single frame following the key release.*
