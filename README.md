@@ -80,6 +80,7 @@ The engine additionally provides the following attributes, which can be accessed
 - rHeight - the resolution height (i.e. windowHeight / pixelSize)
 - timePreviousFrame - time since the previous frame
 - fps - frames per second
+- draws - number of individual draws per frame
 - (experimental) timeBetweenFrames - add a delay between each frame (in ms); defaults to 0 
 
 These should not be overwritten by the user, once the engine has been initialized. (Might be worth it to make them *private* in the future)
