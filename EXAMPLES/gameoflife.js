@@ -1,8 +1,8 @@
 (() => {
     "use strict";
 
-    const WW = 1000;
-    const WH = 600;
+    const WW = 1200;
+    const WH = 800;
     const CELL_SIZE = 5;
     const NUM_CELLS = (WW / CELL_SIZE) * (WH / CELL_SIZE);
 
@@ -21,8 +21,9 @@
             if (center < i && i < center + wow.length)
                 cells[i] = wow[strIndex++] === "1";
 
-        const controls = document.getElementById("controls");
+        const controls = document.createElement("div");
         controls.innerHTML = controlsHtmlString();
+        document.body.insertBefore(controls, document.body.childNodes[1]);  // offset canvas element
 
         return true;
     };
@@ -64,7 +65,7 @@
 
         Object.keys(previousFigure).forEach(index => {
             const [x, y] = coords2d(index, game.rWidth);
-            game.drawRect(x, y, 1, 1, { color: "green" });
+            game.drawRect(x, y, 1, 1, { color: "lime" });
         });
 
         Object.keys(selectedCells).forEach(index => {
@@ -93,8 +94,6 @@
             selectedCells = {};
         }
 
-        if (game.keys["r"]?.pressed) game.reset();
-
         return true;
     };
 
@@ -119,9 +118,8 @@ function numNeighbors(cells, i, w) {
 
 function controlsHtmlString() {
     return `
-        <h3>Controls</h3>
-        <p>Left click cells to select them.</p>
-        <p>Hold the mouse button to select multiple cells at once.</p>
-        <p>Press enter to activate the selected cells.</p>
+        <div><b>Controls</b></div>
+        <div>Press the left mouse button to select cells.</div>
+        <div>Press enter to activate the selected cells.</div>
     `;
 }

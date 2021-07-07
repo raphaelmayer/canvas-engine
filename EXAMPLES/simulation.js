@@ -1,4 +1,4 @@
-// import CanvasEngine2d from "./GameEngine2d.js";
+"use strict";
 
 let idCounter = 0;
 
