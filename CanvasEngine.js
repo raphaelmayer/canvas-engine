@@ -152,15 +152,15 @@ class CanvasEngine {
         }
     }
 
-    drawText(text, x, y, fontsize, opts = {}) {
+    drawText(text, x, y, fontSize, opts = {}) {
         this.draws++;
         const font = opts.font ? opts.font : "Arial";
         if (opts.color) this.context.fillStyle = opts.color;
 
         x *= this.pixelSize;
-        y = y * this.pixelSize + fontsize;
+        y = y * this.pixelSize + fontSize;
 
-        this.context.font = `${fontsize}px ${font}`;
+        this.context.font = `${fontSize}px ${font}`;
         this.context.fillText(text, x, y);
     }
 }
@@ -174,19 +174,19 @@ function calculateFps(timePreviousFrame, now) {
 
 function registerKeyboardAndMouseEvents(engine) {
     const keydown_event = document.addEventListener("keydown", e => {
-        console.log("down:", e.key);
+        engine.debug && console.log("down:", e.key);
         engine.keys[e.key] = { held: true, pressed: false };
     });
     const mousedown_event = document.addEventListener("mousedown", e => {
-        console.log(`down: mouse${e.button}`);
+        engine.debug && console.log(`down: mouse${e.button}`);
         engine.keys[`mouse${e.button}`] = { held: true, pressed: false };
     });
     const keyup_event = document.addEventListener("keyup", e => {
-        console.log("up:", e.key);
+        engine.debug && console.log("up:", e.key);
         engine.keys[e.key] = { held: false, pressed: true };
     });
     const mouseup_event = document.addEventListener("mouseup", e => {
-        console.log(`up: mouse${e.button}`);
+        engine.debug && console.log(`up: mouse${e.button}`);
         engine.keys[`mouse${e.button}`] = { held: false, pressed: true };
     });
     const mousemove_event = document.addEventListener("mousemove", e => {
