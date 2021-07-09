@@ -1,6 +1,4 @@
-"use strict";
-
-let idCounter = 0;
+let idCounter = 0; // assign unique id to every new entity and increment
 
 (() => {
     "use strict";
@@ -9,80 +7,27 @@ let idCounter = 0;
     let entities = [];
 
     game.onStart = (game) => {
-        for (let i = 0; i < 20; i++) {
+        for (let i = 0; i < 20; i++)
             entities.push(new Entity(rndNr(0, 600), rndNr(0, 400), 1, 1));
-        }
 
         return true;
     };
 
     game.onUpdate = (game) => {
-        game.drawRect(0, 0, game.windowWidth, game.windowHeight, { color: "#eee" });
+        game.clearWindow();
 
         for (let i = 0; i < entities.length; ++i) {
             const entity = entities[i];
 
-            if (entity.health === 0) continue;
+            entity.update(game, entities, i);
 
-            // routine
-            entity.vx = entity.x < 100 ? 1 : entity.vx;
-            entity.vx = entity.x > 600 ? -1 : entity.vx;
-            entity.vy = entity.y < 100 ? 1 : entity.vy;
-            entity.vy = entity.y > 400 ? -1 : entity.vy;
-            entity.vx = !entity.vx ? rndNr(0, 149) % 3 - 1 : entity.vx;
-            entity.vy = !entity.vy ? rndNr(0, 149) % 3 - 1 : entity.vy;
-            // entity.vy = entity.y < 100 ? 4 : -4;
-
-            for (let j = 0; j < entities.length; ++j) {
-                const otherEntity = entities[j];
-                if (entity.id === otherEntity.id || otherEntity.health === 0) continue;
-
-                // chase down enemies
-                const dist = Math.sqrt((otherEntity.x - entity.x) * (otherEntity.x - entity.x) + (otherEntity.y - entity.y) * (otherEntity.y - entity.y)); // slow and incorrect (is dist between points not rects)
-                if (entity.faction !== otherEntity.faction && dist < entity.viewDistance) {
-                    entity.vx = otherEntity.x - entity.x;
-                    entity.vy = otherEntity.y - entity.y;
-                    const max = Math.abs(entity.vx) < Math.abs(entity.vy) ? Math.abs(entity.vy) : Math.abs(entity.vx);
-
-                    const sign = entity.health < otherEntity.health ? -1 : 1;
-
-                    entity.vx = sign * entity.vx / (max + 0.000000000001);
-                    entity.vy = sign * entity.vy / (max + 0.000000000001);
-                }
-
-                // collision check
-                if (wouldCollide(entity, otherEntity)) {
-                    entity.vx = rndNr(0, 149) % 3 - 1;
-                    entity.vy = rndNr(0, 149) % 3 - 1;
-
-                    if (entity.faction !== otherEntity.faction && otherEntity.health <= entity.health) {
-                        entities[i].health += entities[j].health;
-                        entities[j].health = 0;
-                    }
-                }
-
+            if (entity.health > 0) { // dead entities do not actually get removed from the array
+                game.drawRect(entity.x, entity.y, entity.w + entity.health, entity.h + entity.health, { color: entity.faction });
+                game.drawCircle(entity.x + (entity.w + entity.health) / 2, entity.y + (entity.h + entity.health) / 2, entity.viewDistance, { color: "black" });
             }
-
-            // bounds check
-            if (entity.x < 0) entity.x = 0;
-            if (entity.y < 0) entity.y = 0;
-            if (entity.x + entity.w > game.windowWidth) entity.x = game.windowWidth - entity.w;
-            if (entity.y + entity.h > game.windowHeight) entity.y = game.windowHeight - entity.h;
-
-            entity.x += entity.vx;
-            entity.y += entity.vy;
-
-            game.drawRect(entity.x, entity.y, entity.w + entity.health, entity.h + entity.health, { color: entity.faction });
-            game.drawCircle(entity.x + (entity.w + entity.health) / 2, entity.y + (entity.h + entity.health) / 2, entity.viewDistance, { color: "black" });
         }
 
-        // debug stuff
-        const aliveEntities = entities.filter(e => e.health);
-        game.drawText(`${aliveEntities.length} entities alive`, 20, 20, 20, { color: "black" });
-        for (var i = aliveEntities.length - 1; i >= 0; i--) {
-            const string = `x:${aliveEntities[i].x.toFixed(2)} y:${aliveEntities[i].y.toFixed(2)}, xv:${aliveEntities[i].vx.toFixed(2)} vy:${aliveEntities[i].vy.toFixed(2)}`;
-            game.drawText(string, 20, 20 * (i + 2), 20, { color: aliveEntities[i].faction });
-        }
+        drawEntityInfo(game, entities);
 
         return true;
     };
@@ -95,10 +40,62 @@ function Entity(x, y, w, h, viewDistance = 80, color = "purple") {
         id: idCounter++,
         x, y, w, h,
         vx: 0, vy: 0,
+        baseVelocity: 0.5,
         color,
         viewDistance,
         faction: idCounter % 2 ? "red" : "blue",
-        health: 5
+        health: 5,
+        update: (game, entities) => {
+            if (_this.health === 0) return;
+
+            // routine
+            _this.vx = _this.x < 100 ? _this.baseVelocity : _this.vx;
+            _this.vx = _this.x > 600 ? -_this.baseVelocity : _this.vx;
+            _this.vy = _this.y < 100 ? _this.baseVelocity : _this.vy;
+            _this.vy = _this.y > 400 ? -_this.baseVelocity : _this.vy;
+            _this.vx = !_this.vx ? (rndNr(0, 149) % 3 - 1) * _this.baseVelocity : _this.vx;
+            _this.vy = !_this.vy ? (rndNr(0, 149) % 3 - 1) * _this.baseVelocity : _this.vy;
+
+            // bounds check
+            if (_this.x < 0) _this.x = 0;
+            if (_this.y < 0) _this.y = 0;
+            if (_this.x + _this.w > game.windowWidth) _this.x = game.windowWidth - _this.w;
+            if (_this.y + _this.h > game.windowHeight) _this.y = game.windowHeight - _this.h;
+
+            for (let j = 0; j < entities.length; ++j) {
+                const otherbbbntity = entities[j];
+                if (_this.id === otherbbbntity.id || otherbbbntity.health === 0) continue;
+
+                // chase down enemies
+                const dirX = otherbbbntity.x - _this.x;
+                const dirY = otherbbbntity.y - _this.y;
+
+                const dist = Math.sqrt((dirX) * (dirX) + (dirY) * (dirY)); // slow and incorrect (is dist between points not rects)
+                if (_this.faction !== otherbbbntity.faction && dist < _this.viewDistance) {     // if sees enemy
+                    const [dx, dy] = normDirVec(_this, otherbbbntity);
+                    const sign = _this.health < otherbbbntity.health ? -1 : 1;                  // fight or flight
+
+                    _this.vx = sign * dx * _this.baseVelocity;
+                    _this.vy = sign * dy * _this.baseVelocity;
+                }
+
+                // collision check
+                if (wouldCollide(_this, otherbbbntity)) {
+                    // fightOrFlight();
+                    _this.vx = (rndNr(0, 149) % 3 - 1) * _this.baseVelocity;
+                    _this.vy = (rndNr(0, 149) % 3 - 1) * _this.baseVelocity;
+
+                    if (_this.faction !== otherbbbntity.faction && otherbbbntity.health <= _this.health) {
+                        _this.health += entities[j].health;
+                        entities[j].health = 0;
+                    }
+                }
+
+            }
+
+            _this.x += _this.vx;
+            _this.y += _this.vy;
+        }
     };
     return _this;
 }
@@ -109,6 +106,19 @@ function rndNr(min = 0, max = 100) {
 
 function inAggroRange(a, b) {
     return true;
+}
+
+/**
+ * Returns a normalized direction vector pointing from entity to otherEntity.
+ * @param {*} entity 
+ * @param {*} otherEntity 
+ * @returns 
+ */
+function normDirVec(entity, otherEntity) {
+    const dirX = otherEntity.x - entity.x;
+    const dirY = otherEntity.y - entity.y;
+    const max = Math.abs(dirX) < Math.abs(dirY) ? Math.abs(dirY) : Math.abs(dirX);
+    return [dirX / (max + 0.000000000001), dirY / (max + 0.000000000001)]
 }
 
 function rectanglesIntersect(minAx, minAy, maxAx, maxAy, minBx, minBy, maxBx, maxBy) {
@@ -131,4 +141,17 @@ function wouldCollide(entity, otherEntity) {
         otherEntity.x + otherEntity.w + otherEntity.health,
         otherEntity.y + otherEntity.h + otherEntity.health,
     )
+}
+
+function drawEntityInfo(game, entities) {
+    const aliveEntities = entities.filter(e => e.health);
+    const fontSize = 15;
+    
+    game.drawText(`${aliveEntities.length} entities alive`, 5, 0, fontSize, { color: "black" });
+    
+    for (var i = aliveEntities.length - 1; i >= 0; i--) {
+        const entity = aliveEntities[i];
+        const string = `${entity.id}: x: ${entity.x.toFixed(0)} y: ${entity.y.toFixed(0)}, xv: ${entity.vx.toFixed(2)} vy: ${entity.vy.toFixed(2)}`;
+        game.drawText(string, 5, fontSize * (i + 1), fontSize, { color: entity.faction });
+    }
 }
