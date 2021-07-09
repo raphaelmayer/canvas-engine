@@ -2,7 +2,7 @@
     "use strict";
 
     const WW = 1200;
-    const WH = 800;
+    const WH = 640;
     const CELL_SIZE = 5;
     const NUM_CELLS = (WW / CELL_SIZE) * (WH / CELL_SIZE);
 
@@ -11,6 +11,7 @@
     const newCells = [];
     let selectedCells = {};
     let previousFigure = {};
+    let numGenerations = 0;
 
     game.onStart = (game) => {
         let strIndex = 0;
@@ -21,15 +22,14 @@
             if (center < i && i < center + wow.length)
                 cells[i] = wow[strIndex++] === "1";
 
-        const controls = document.createElement("div");
-        controls.innerHTML = controlsHtmlString();
-        document.body.insertBefore(controls, document.body.childNodes[1]);  // offset canvas element
+        insertControlsIntoDOM();
 
         return true;
     };
 
     game.onUpdate = (game) => {
         game.clearWindow();
+        ++numGenerations;
 
         // update cell states
         for (let i = 0; i < NUM_CELLS; ++i) {
@@ -59,7 +59,6 @@
         // draw grid
         for (let i = 0; i < game.rWidth; i++)
             game.drawLine(i, 0, i, game.rHeight, { color: "black", lineWidth: 0.01 });
-
         for (let i = 0; i < game.rHeight; i++)
             game.drawLine(0, i, game.rWidth, i, { color: "black", lineWidth: 0.01 });
 
@@ -77,6 +76,8 @@
         const x = Math.floor(game.mouse.x / game.pixelSize);
         const y = Math.floor(game.mouse.y / game.pixelSize);
         game.drawRect(x, y, 1, 1, { color: "skyblue" });
+
+        game.drawText(`Generation ${numGenerations}`, 0, 0, 14, { color: "black" });
 
         // handle user input
         if (game.keys["mouse0"] && (game.keys["mouse0"].held || game.keys["mouse0"]?.pressed)) { // handle mouse click or hold
@@ -104,7 +105,7 @@ function coords2d(i, w) {
     return [i % w, Math.floor(i / w)];
 }
 
-function numNeighbors(cells, i, w) {
+function numNeighbors(cells, i, w) { // very naive implementation
     const neighborIndices1d = [
         i - 1 - w, i - w, i + 1 - w,
         i - 1, /*i,*/ i + 1,
@@ -116,10 +117,12 @@ function numNeighbors(cells, i, w) {
     return count;
 }
 
-function controlsHtmlString() {
-    return `
+function insertControlsIntoDOM() {
+    const controls = document.createElement("div");
+    controls.innerHTML = `
         <div><b>Controls</b></div>
         <div>Press the left mouse button to select cells.</div>
         <div>Press enter to activate the selected cells.</div>
     `;
+    document.body.insertBefore(controls, document.body.childNodes[1]);  // offset canvas element
 }
