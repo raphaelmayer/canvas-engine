@@ -6,15 +6,13 @@ So I wrote this very basic engine to be able to quickly play around with stuff.
 
 **Tested on Firefox, Chrome and Edge**
 
-## Basic Usage
+
+## Quick Start
 This is completely free of any dependencies and the engine is contained in a single file ```CanvasEngine.js```.
 You only require CanvasEngine.js and a html file to get started, but it is preferable to also have a separate main.js file for your javascript code. 
-
-### Quick Start
 Clone this repository and start editing main.js.
 
 If you do not want to clone this repository, you need to copy CanvasEngine.js and handle files and imports yourself.
-
 A minimal setup could look like this, assuming all files are in the same directory:
 
 **index.html**
@@ -55,10 +53,16 @@ game.onUpdate = (game) => {     // runs on every frame
 game.start();                   // start the update loop
 ```
 
+Firstly create a new CanvasEngine object.
+You then need to overwrite ```onStart()``` and ```onUpdate()```.
+The last thing to do is to call ```start()```.
+
 See the the documenation below or look into the EXAMPLES folder for more details on how to use this project.
 
-### Initialization
-```CanvasEngine``` requires 3 arguments:
+
+## Basic Usage
+### CanvasEngine class
+```CanvasEngine``` requires 3 arguments to initialize:
 - title - name of the project
 - window width - the window width in pixels
 - window height - the window height in pixels
@@ -70,23 +74,22 @@ See the the documenation below or look into the EXAMPLES folder for more details
 const game = new CanvasEngine("EngineDemo", WINDOW_WIDTH, WINDOW_HEIGHT, PIXEL_SIZE);
 ```
 
-### Useful attributes
-The engine additionally provides the following attributes, which can be accessed via ```game.<attribute>```:
+The engine provides the following attributes, which can be accessed via ```game.<attribute>```:
 - title
 - windowWidth
 - windowHeight 
 - pixelSize
-- rWidth - the resolution width (i.e. windowWidth / pixelSize)
-- rHeight - the resolution height (i.e. windowHeight / pixelSize)
+- rWidth - the resolution width (i.e. ```windowWidth / pixelSize```)
+- rHeight - the resolution height (i.e. ```windowHeight / pixelSize```)
 - timePreviousFrame - time since the previous frame
 - fps - frames per second
 - draws - number of individual draw-type function calls per frame
-- (experimental) timeBetweenFrames - add a delay between each frame (in ms); defaults to 0 
+- (experimental) timeBetweenFrames - add a delay between each frame (in ms); **defaults to 0** 
 
-These should not be overwritten by the user, once the engine has been initialized. (Might be worth it to make them *private* in the future)
+Note, that these attributes should not be overwritten by the user, once the engine has been initialized. (Might be worth it to make them *private* in the future)
 
-### Drawing
-TODO
+### Drawing to the screen
+**TODO**
 
 ### Listening for User Input
 Listening for input events is handled for you. Listening for key input:
@@ -111,4 +114,4 @@ For now, one must check, whether game.keys["..."] exists. This is subject to cha
 *Note: game.keys[(...)].pressed is true for the single frame following the key release.*
 
 ## Examples
-You can try out different examples by loading a script from the examples folder instead of main.js, i.e. ```<script src="./EXAMPLES/gameoflife.js"></script>```.
+You can try out different examples by editing index.html and importing a script from the examples folder instead of main.js, i.e. ```<script src="./EXAMPLES/gameoflife.js"></script>```.
