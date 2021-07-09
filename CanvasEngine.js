@@ -17,8 +17,8 @@ class CanvasEngine {
         this.context = this.canvas.getContext("2d");
 
         // internal engine attributes
-        this.debug = false;
-        this.internalEventHandlers = [];
+        this.debug = true;
+        this.internalEventHandlers = []; // used for this.destroy function
 
         // public engine attributes
         this.mouse = { x: 0, y: 0 };
@@ -158,7 +158,7 @@ class CanvasEngine {
         if (opts.color) this.context.fillStyle = opts.color;
 
         x *= this.pixelSize;
-        y *= this.pixelSize;
+        y = y * this.pixelSize + fontsize;
 
         this.context.font = `${fontsize}px ${font}`;
         this.context.fillText(text, x, y);
@@ -190,8 +190,8 @@ function registerKeyboardAndMouseEvents(engine) {
         engine.keys[`mouse${e.button}`] = { held: false, pressed: true };
     });
     const mousemove_event = document.addEventListener("mousemove", e => {
-        engine.mouse.x = e.x + Math.round(window.scrollX); // is round even sensible?
-        engine.mouse.y = e.y + Math.round(window.scrollY); // is round even sensible?
+        engine.mouse.x = e.x + Math.round(window.scrollX) - engine.canvas.offsetLeft; // is round even sensible?
+        engine.mouse.y = e.y + Math.round(window.scrollY) - engine.canvas.offsetTop; // is round even sensible?
     });
 
     engine.internalEventHandlers.push(keydown_event, mousedown_event, keyup_event, mouseup_event, mousemove_event);
