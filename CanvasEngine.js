@@ -100,6 +100,8 @@ class CanvasEngine {
     }
 
     drawCircle(x, y, radius, opts = {}) {
+        checkArgsOrThrow("drawCircle", arguments);
+
         this.draws++;
         if (opts.color) this.context.strokeStyle = opts.color;
         if (opts.lineWidth && Number(opts.lineWidth))
@@ -115,6 +117,8 @@ class CanvasEngine {
     }
 
     drawLine(sx, sy, ex, ey, opts = {}) {
+        checkArgsOrThrow("drawLine", arguments);
+
         this.draws++;
         if (opts.color) this.context.strokeStyle = opts.color;
         if (opts.lineWidth && Number(opts.lineWidth))
@@ -133,6 +137,8 @@ class CanvasEngine {
     }
 
     drawRect(x, y, w, h, opts = {}) {
+        checkArgsOrThrow("drawRect", arguments);
+
         this.draws++;
         const fill = opts.fill !== false;
         if (opts.color) this.context.fillStyle = opts.color;
@@ -153,6 +159,8 @@ class CanvasEngine {
     }
 
     drawText(text, x, y, fontSize, opts = {}) {
+        checkArgsOrThrow("drawText", arguments);
+
         this.draws++;
         const font = opts.font ? opts.font : "Arial";
         if (opts.color) this.context.fillStyle = opts.color;
@@ -239,4 +247,10 @@ function createCanvas(h, w) {
     canvas.height = w;
     document.body.insertBefore(canvas, document.body.childNodes[0]);
     return canvas;
+}
+
+function checkArgsOrThrow(fname, args) {
+    for (let i = 0; i < args.length - 1; i++) {
+        if (!args[i] && args[i] !== 0) throw new Error(`${fname}: Argument ${i} is undefined or null.`);
+    }
 }
