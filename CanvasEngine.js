@@ -1,7 +1,7 @@
 class CanvasEngine {
     constructor(title, windowWidth, windowHeight, pixelSize = 1) {
         if (!title || !windowWidth || !windowHeight || !pixelSize)
-            return console.error("Error: Could not construct due to missing parameters.");
+            throw new Error("Could not instantiate CanvasEngine due to missing parameters.");
 
         document.title = title;
 
@@ -92,17 +92,18 @@ class CanvasEngine {
      * draw routines 
      */
     clearWindow(color) {
-        this.draws++;
         if (color)
             this.drawRect(0, 0, this.rWidth, this.rHeight, { color });
-        else
+        else {
+            this.draws++;
             this.context.clearRect(0, 0, this.windowWidth, this.windowHeight);
+        }
     }
 
-    drawCircle(x, y, radius, opts = {}) {
-        checkArgsOrThrow("drawCircle", arguments);
-
+    drawArc(x, y, radius, startAngle, endAngle, opts = {}) {
+        checkArgsOrThrow("drawArc", arguments);
         this.draws++;
+
         if (opts.color) this.context.strokeStyle = opts.color;
         if (opts.lineWidth && Number(opts.lineWidth))
             this.context.lineWidth = opts.lineWidth * this.pixelSize;
@@ -112,14 +113,21 @@ class CanvasEngine {
         radius *= this.pixelSize;
 
         this.context.beginPath();
-        this.context.arc(x, y, radius, 0, 2 * Math.PI);
+        this.context.arc(x, y, radius, startAngle, endAngle);
         this.context.stroke();
+    }
+
+    drawCircle(x, y, radius, opts = {}) {
+        checkArgsOrThrow("drawCircle", arguments);
+
+        // TODO: add fill option
+        this.drawArc(x, y, radius, 0, 2 * Math.PI, opts);
     }
 
     drawLine(sx, sy, ex, ey, opts = {}) {
         checkArgsOrThrow("drawLine", arguments);
-
         this.draws++;
+
         if (opts.color) this.context.strokeStyle = opts.color;
         if (opts.lineWidth && Number(opts.lineWidth))
             this.context.lineWidth = opts.lineWidth * this.pixelSize;
@@ -138,8 +146,8 @@ class CanvasEngine {
 
     drawRect(x, y, w, h, opts = {}) {
         checkArgsOrThrow("drawRect", arguments);
-
         this.draws++;
+
         const fill = opts.fill !== false;
         if (opts.color) this.context.fillStyle = opts.color;
         if (opts.color) this.context.strokeStyle = opts.color;
@@ -160,8 +168,8 @@ class CanvasEngine {
 
     drawText(text, x, y, fontSize, opts = {}) {
         checkArgsOrThrow("drawText", arguments);
-
         this.draws++;
+
         const font = opts.font ? opts.font : "Arial";
         if (opts.color) this.context.fillStyle = opts.color;
 
@@ -173,33 +181,35 @@ class CanvasEngine {
     }
 }
 
-function calculateFps(timePreviousFrame, now) {
+function calculateFps(timePreviousFrame, timeCurrentFrame) {
     if (!timePreviousFrame) return 0;
 
-    const delta = (now - timePreviousFrame) / 1000;
+    const delta = (timeCurrentFrame - timePreviousFrame) / 1000;
     return (1 / delta).toFixed(0);
 }
 
 function registerKeyboardAndMouseEvents(engine) {
+    const { debug, keys, mouse, canvas } = engine;
+
     const keydown_event = document.addEventListener("keydown", e => {
-        engine.debug && console.log("down:", e.key);
-        engine.keys[e.key] = { held: true, pressed: false };
+        debug && console.log("down:", e.key);
+        keys[e.key] = { held: true, pressed: false };
     });
     const mousedown_event = document.addEventListener("mousedown", e => {
-        engine.debug && console.log(`down: mouse${e.button}`);
-        engine.keys[`mouse${e.button}`] = { held: true, pressed: false };
+        debug && console.log(`down: mouse${e.button}`);
+        keys[`mouse${e.button}`] = { held: true, pressed: false };
     });
     const keyup_event = document.addEventListener("keyup", e => {
-        engine.debug && console.log("up:", e.key);
-        engine.keys[e.key] = { held: false, pressed: true };
+        debug && console.log("up:", e.key);
+        keys[e.key] = { held: false, pressed: true };
     });
     const mouseup_event = document.addEventListener("mouseup", e => {
-        engine.debug && console.log(`up: mouse${e.button}`);
-        engine.keys[`mouse${e.button}`] = { held: false, pressed: true };
+        debug && console.log(`up: mouse${e.button}`);
+        keys[`mouse${e.button}`] = { held: false, pressed: true };
     });
     const mousemove_event = document.addEventListener("mousemove", e => {
-        engine.mouse.x = e.x + Math.round(window.scrollX) - engine.canvas.offsetLeft; // is round even sensible?
-        engine.mouse.y = e.y + Math.round(window.scrollY) - engine.canvas.offsetTop; // is round even sensible?
+        mouse.x = e.x + Math.round(window.scrollX) - canvas.offsetLeft; // is round even sensible?
+        mouse.y = e.y + Math.round(window.scrollY) - canvas.offsetTop; // is round even sensible?
     });
 
     engine.internalEventHandlers.push(keydown_event, mousedown_event, keyup_event, mouseup_event, mousemove_event);
@@ -251,6 +261,7 @@ function createCanvas(h, w) {
 
 function checkArgsOrThrow(fname, args) {
     for (let i = 0; i < args.length - 1; i++) {
-        if (!args[i] && args[i] !== 0) throw new Error(`${fname}: Argument ${i} is undefined or null.`);
+        if (!args[i] && args[i] !== 0) 
+            throw new Error(`${fname}: Argument ${i} is undefined or null.`);
     }
 }
