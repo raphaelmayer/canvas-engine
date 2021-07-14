@@ -74,6 +74,12 @@ See the the documenation below or look into the EXAMPLES folder for more details
 const game = new CanvasEngine("EngineDemo", WINDOW_WIDTH, WINDOW_HEIGHT, PIXEL_SIZE);
 ```
 
+Two methods need to be overwritten, namely ```game.onStart``` and ```game.onUpdate```.
+**game.onStart** runs once before the very first frame. Has to return true else the engine aborts.
+If you need to do some async operations you may also return a Promise and resolve it with true when you are done.
+**game.onUpdate** runs every frame. If it does not return true, the engine aborts.
+A single call to ```game.start()``` will then initiate the loop.
+
 The engine provides the following attributes, which can be accessed via ```game.<attribute>```:
 - title
 - windowWidth
