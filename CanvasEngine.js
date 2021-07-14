@@ -55,8 +55,9 @@ class CanvasEngine {
 
         registerKeyboardAndMouseEvents(this);
 
-        const returnValue = await this.onStart(this); // run user's start function once before the very first frame
-        if (returnValue)
+        // run user's start function once before the very first frame and await
+        // in case the user has to do async stuff in the onStart function. otherwise has no effect
+        if (await this.onStart(this))
             requestAnimationFrame(this.update);
     }
 
