@@ -190,27 +190,27 @@ function calculateFps(timePreviousFrame, timeCurrentFrame) {
 }
 
 function registerKeyboardAndMouseEvents(engine) {
-    const { debug, keys, mouse, canvas } = engine;
+    const { debug, canvas } = engine;
 
     const keydown_event = document.addEventListener("keydown", e => {
         debug && console.log("down:", e.key);
-        keys[e.key] = { held: true, pressed: false };
+        engine.keys[e.key] = { held: true, pressed: false };
     });
     const mousedown_event = document.addEventListener("mousedown", e => {
         debug && console.log(`down: mouse${e.button}`);
-        keys[`mouse${e.button}`] = { held: true, pressed: false };
+        engine.keys[`mouse${e.button}`] = { held: true, pressed: false };
     });
     const keyup_event = document.addEventListener("keyup", e => {
         debug && console.log("up:", e.key);
-        keys[e.key] = { held: false, pressed: true };
+        engine.keys[e.key] = { held: false, pressed: true };
     });
     const mouseup_event = document.addEventListener("mouseup", e => {
         debug && console.log(`up: mouse${e.button}`);
-        keys[`mouse${e.button}`] = { held: false, pressed: true };
+        engine.keys[`mouse${e.button}`] = { held: false, pressed: true };
     });
     const mousemove_event = document.addEventListener("mousemove", e => {
-        mouse.x = e.x + Math.round(window.scrollX) - canvas.offsetLeft; // is round even sensible?
-        mouse.y = e.y + Math.round(window.scrollY) - canvas.offsetTop; // is round even sensible?
+        engine.mouse.x = e.x + Math.round(window.scrollX) - canvas.offsetLeft; // is round even sensible?
+        engine.mouse.y = e.y + Math.round(window.scrollY) - canvas.offsetTop; // is round even sensible?
     });
 
     engine.internalEventHandlers.push(keydown_event, mousedown_event, keyup_event, mouseup_event, mousemove_event);
