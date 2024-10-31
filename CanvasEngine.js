@@ -5,7 +5,7 @@ class CanvasEngine {
 
         document.title = title;
 
-        // window constants
+        // Window constants
         this.title = title;
         this.windowWidth = windowWidth;
         this.windowHeight = windowHeight;
@@ -16,88 +16,102 @@ class CanvasEngine {
         this.canvas = createCanvas(windowWidth, windowHeight);
         this.context = this.canvas.getContext("2d");
 
-        // internal engine attributes
-        this.debug = true;
-        this.internalEventHandlers = []; // used for this.destroy function
+        // Apply global scaling
+        this.context.scale(this.pixelSize, this.pixelSize);
 
-        // public engine attributes
+        // Internal engine attributes
+        this.debug = true;
+        this.internalEventHandlers = []; // Used for this.destroy function
+
+        // Public engine attributes
         this.mouse = { x: 0, y: 0 };
         this.keys = {};
         this.timePreviousFrame = 0;
         this.fps = 0;
         this.draws = 0;
-        this.timeoutBetweenFrames = 0; // experimental
+        this.timeoutBetweenFrames = 0; // Experimental
     }
 
     /**
      * This method is to be overwritten by the user. It is called exactly once before the first frame.
      * Aborts, if false is returned.
-     * @param {*} game 
-     * @returns 
+     * @param {*} game
+     * @returns
      */
-    onStart = game => {
+    onStart = (game) => {
         return false;
     };
 
     /**
      * This method is to be overwritten by the user. It is called on every new frame.
      * Aborts, if false is returned.
-     * @param {*} game 
-     * @returns 
+     * @param {*} game
+     * @returns
      */
-    onUpdate = game => {
+    onUpdate = (game) => {
         return false;
     };
 
     start = async () => {
-        console.log(`window size: ${this.windowWidth} * ${this.windowHeight}\n` +
-            `pixel ratio: 1:${this.pixelSize}, resolution: ${this.rWidth} * ${this.rHeight}`);
+        console.log(
+            `window size: ${this.windowWidth} * ${this.windowHeight}\n` +
+                `pixel ratio: 1:${this.pixelSize}, resolution: ${this.rWidth} * ${this.rHeight}`
+        );
 
         registerKeyboardAndMouseEvents(this);
 
-        // run user's start function once before the very first frame and await
-        // in case the user has to do async stuff in the onStart function. otherwise has no effect
-        if (await this.onStart(this))
-            requestAnimationFrame(this.update);
-    }
+        // Run user's start function once before the very first frame and await
+        // in case the user has to do async stuff in the onStart function. Otherwise has no effect
+        if (await this.onStart(this)) requestAnimationFrame(this.update);
+    };
 
-    update = () => {
+    update = (timeCurrentFrame) => {
         if (this.onUpdate(this)) {
+            // Calculate deltaTime and FPS
             const now = performance.now();
             this.fps = calculateFps(this.timePreviousFrame, now);
             this.timePreviousFrame = now;
 
+            // Handle built-in debug toggle
             if (this.keys["0"]?.pressed) {
                 console.log(this.debug ? "debug off" : "debug on");
-                this.debug = !this.debug; // built-in debug feature
+                this.debug = !this.debug; // Built-in debug feature
             }
+
+            // Draw debug info if enabled
             if (this.debug) drawDebugInfo(this);
 
-            this.keys = persistMouseKeyStates(this);
+            // Reset keys' pressed and released states
+            Object.keys(this.keys).forEach((key) => {
+                this.keys[key].pressed = false;
+                this.keys[key].released = false;
+            });
+
+            // Reset draws counter
             this.draws = 0;
 
+            // Request next frame
             if (this.timeoutBetweenFrames && Number(this.timeoutBetweenFrames))
                 setTimeout(() => requestAnimationFrame(this.update), this.timeoutBetweenFrames);
-            else
-                requestAnimationFrame(this.update);
+            else requestAnimationFrame(this.update);
         }
-    }
+    };
 
     destroy = () => {
-        this.internalEventHandlers.forEach(
-            eventListener => document.removeEventListener(eventListener));
+        this.internalEventHandlers.forEach((eventListener) => {
+            document.removeEventListener(eventListener.type, eventListener.handler);
+        });
         this.internalEventHandlers = [];
-    }
+    };
 
     /**
-     * draw routines 
+     * Draw routines
      */
     clearWindow(color) {
-        if (color)
-            this.drawRect(0, 0, this.rWidth, this.rHeight, { color });
+        if (color) this.drawRect(0, 0, this.rWidth, this.rHeight, { color });
         else {
             this.draws++;
-            this.context.clearRect(0, 0, this.windowWidth, this.windowHeight);
+            this.context.clearRect(0, 0, this.rWidth, this.rHeight);
         }
     }
 
@@ -106,12 +120,7 @@ class CanvasEngine {
         this.draws++;
 
         if (opts.color) this.context.strokeStyle = opts.color;
-        if (opts.lineWidth && Number(opts.lineWidth))
-            this.context.lineWidth = opts.lineWidth * this.pixelSize;
-
-        x = x * this.pixelSize;
-        y = y * this.pixelSize;
-        radius *= this.pixelSize;
+        if (opts.lineWidth && Number(opts.lineWidth)) this.context.lineWidth = opts.lineWidth;
 
         this.context.beginPath();
         this.context.arc(x, y, radius, startAngle, endAngle);
@@ -130,19 +139,12 @@ class CanvasEngine {
         this.draws++;
 
         if (opts.color) this.context.strokeStyle = opts.color;
-        if (opts.lineWidth && Number(opts.lineWidth))
-            this.context.lineWidth = opts.lineWidth * this.pixelSize;
-
-        sx *= this.pixelSize;
-        sy *= this.pixelSize;
-        ex *= this.pixelSize;
-        ey *= this.pixelSize;
+        if (opts.lineWidth && Number(opts.lineWidth)) this.context.lineWidth = opts.lineWidth;
 
         this.context.beginPath();
         this.context.moveTo(sx, sy);
         this.context.lineTo(ex, ey);
         this.context.stroke();
-
     }
 
     drawRect(x, y, w, h, opts = {}) {
@@ -153,16 +155,9 @@ class CanvasEngine {
         if (opts.color) this.context.fillStyle = opts.color;
         if (opts.color) this.context.strokeStyle = opts.color;
 
-        x *= this.pixelSize;
-        y *= this.pixelSize;
-        w *= this.pixelSize;
-        h *= this.pixelSize;
-
-        if (fill)
-            this.context.fillRect(x, y, w, h);
+        if (fill) this.context.fillRect(x, y, w, h);
         else {
-            if (opts.lineWidth && Number(opts.lineWidth))
-                this.context.lineWidth = opts.lineWidth * this.pixelSize;
+            if (opts.lineWidth && Number(opts.lineWidth)) this.context.lineWidth = opts.lineWidth;
             this.context.strokeRect(x, y, w, h);
         }
     }
@@ -174,11 +169,20 @@ class CanvasEngine {
         const font = opts.font ? opts.font : "Arial";
         if (opts.color) this.context.fillStyle = opts.color;
 
-        x *= this.pixelSize;
-        y = y * this.pixelSize + fontSize;
+        this.context.save(); // Save the current context state
+        // Reset transformations to draw in screen space
+        this.context.setTransform(1, 0, 0, 1, 0, 0);
+
+        // Manually scale position, so text position does scale, but font size does not
+        const scaledX = x * this.pixelSize;
+        const scaledY = y * this.pixelSize;
+
+        y += fontSize; // Adjust y-position for text baseline
 
         this.context.font = `${fontSize}px ${font}`;
-        this.context.fillText(text, x, y);
+        this.context.fillText(text, scaledX, scaledY + fontSize);
+
+        this.context.restore(); // Restore the context state
     }
 }
 
@@ -192,77 +196,116 @@ function calculateFps(timePreviousFrame, timeCurrentFrame) {
 function registerKeyboardAndMouseEvents(engine) {
     const { debug, canvas } = engine;
 
-    const keydown_event = document.addEventListener("keydown", e => {
+    const keydown_handler = (e) => {
         debug && console.log("down:", e.key);
-        engine.keys[e.key] = { held: true, pressed: false };
-    });
-    const mousedown_event = document.addEventListener("mousedown", e => {
-        debug && console.log(`down: mouse${e.button}`);
-        engine.keys[`mouse${e.button}`] = { held: true, pressed: false };
-    });
-    const keyup_event = document.addEventListener("keyup", e => {
+        if (!engine.keys[e.key]) {
+            engine.keys[e.key] = { pressed: true, held: true, released: false };
+        } else {
+            if (!engine.keys[e.key].held) {
+                engine.keys[e.key].pressed = true;
+            }
+            engine.keys[e.key].held = true;
+            engine.keys[e.key].released = false;
+        }
+    };
+
+    const keyup_handler = (e) => {
         debug && console.log("up:", e.key);
-        engine.keys[e.key] = { held: false, pressed: true };
-    });
-    const mouseup_event = document.addEventListener("mouseup", e => {
-        debug && console.log(`up: mouse${e.button}`);
-        engine.keys[`mouse${e.button}`] = { held: false, pressed: true };
-    });
-    const mousemove_event = document.addEventListener("mousemove", e => {
-        engine.mouse.x = e.x + Math.round(window.scrollX) - canvas.offsetLeft; // is round even sensible?
-        engine.mouse.y = e.y + Math.round(window.scrollY) - canvas.offsetTop; // is round even sensible?
-    });
+        if (engine.keys[e.key]) {
+            engine.keys[e.key].held = false;
+            engine.keys[e.key].released = true;
+        }
+    };
 
-    engine.internalEventHandlers.push(keydown_event, mousedown_event, keyup_event, mouseup_event, mousemove_event);
-}
+    const mousedown_handler = (e) => {
+        const key = `mouse${e.button}`;
+        debug && console.log(`down: ${key}`);
+        if (!engine.keys[key]) {
+            engine.keys[key] = { pressed: true, held: true, released: false };
+        } else {
+            if (!engine.keys[key].held) {
+                engine.keys[key].pressed = true;
+            }
+            engine.keys[key].held = true;
+            engine.keys[key].released = false;
+        }
+    };
 
-/**
- * Contrary to regular keyboard keys, held mouse buttons do not retrigger a mousedown event on each frame.
- * So we need to manually persist the .held attribute of all pressed and held mouse keys across iterations.
- * @param {*} engine 
- * @returns 
- */
-function persistMouseKeyStates(engine) {
-    const mouseKeyState = {};
-    Object.keys(engine.keys).forEach(key => {
-        if (key.substring(0, 5) === "mouse" && engine.keys[key].held)
-            mouseKeyState[key] = engine.keys[key];
-    });
-    return mouseKeyState;
+    const mouseup_handler = (e) => {
+        const key = `mouse${e.button}`;
+        debug && console.log(`up: ${key}`);
+        if (engine.keys[key]) {
+            engine.keys[key].held = false;
+            engine.keys[key].released = true;
+        }
+    };
+
+    const mousemove_handler = (e) => {
+        const rect = canvas.getBoundingClientRect();
+        engine.mouse.x = (e.clientX - rect.left) / engine.pixelSize;
+        engine.mouse.y = (e.clientY - rect.top) / engine.pixelSize;
+    };
+
+    document.addEventListener("keydown", keydown_handler);
+    document.addEventListener("keyup", keyup_handler);
+    document.addEventListener("mousedown", mousedown_handler);
+    document.addEventListener("mouseup", mouseup_handler);
+    document.addEventListener("mousemove", mousemove_handler);
+
+    engine.internalEventHandlers.push(
+        { type: "keydown", handler: keydown_handler },
+        { type: "keyup", handler: keyup_handler },
+        { type: "mousedown", handler: mousedown_handler },
+        { type: "mouseup", handler: mouseup_handler },
+        { type: "mousemove", handler: mousemove_handler }
+    );
 }
 
 function drawDebugInfo(engine) {
-    const { windowHeight, fps, mouse, draws } = engine;
+    const { context, windowHeight, fps, mouse, draws } = engine;
     const fontSize = 14;
-    const padding = 8;                  // in pixels
-    const width = 144 / 12;             // this number determines the width of the box and is determined by the text to be displayed
-    const numLines = 4;                 // number of debug menu lines; for easy adjustment
+    const padding = 8; // In pixels
+    const width = 18; // Approximate width in characters
+    const numLines = 4; // Number of debug menu lines
 
-    // we are using the canvas API directly to be able to draw the window nicely
-    engine.context.fillStyle = "rgba(20,20,20,0.7)";
-    engine.context.fillRect(0,
-                            windowHeight - ((numLines - 0) * fontSize + padding),
-                            width * fontSize + padding * 2,             // padding needs to be doubled to offset the x - padding
-                            numLines * fontSize + padding * 3);         // padding needs to be doubled to offset the x - padding + padding for better GUI
-    engine.context.fillStyle = "white";
-    engine.context.font = `${fontSize}px monospace`;
-    engine.context.fillText("FPS: " + fps, padding, windowHeight - ((numLines - 0) * fontSize - padding));
-    engine.context.fillText(`mouse x: ${mouse.x}`, padding, windowHeight - ((numLines - 1) * fontSize - padding));
-    engine.context.fillText(`mouse y: ${mouse.y}`, padding, windowHeight - ((numLines - 2) * fontSize - padding));
-    engine.context.fillText(`draws / frame: ${draws}`, padding, windowHeight - ((numLines - 3) * fontSize - padding));
+    // Calculate box dimensions
+    const boxWidth = width * (fontSize * 0.6) + padding * 2;
+    const boxHeight = numLines * fontSize + padding * 3;
+
+    context.save(); // Save the current context state
+    // Reset transformations to draw in screen space
+    context.setTransform(1, 0, 0, 1, 0, 0);
+
+    // Draw semi-transparent background
+    context.fillStyle = "rgba(20,20,20,0.7)";
+    context.fillRect(0, windowHeight - boxHeight, boxWidth, boxHeight);
+
+    // Set text style
+    context.fillStyle = "white";
+    context.font = `${fontSize}px monospace`;
+
+    // Calculate text positions
+    const baseY = windowHeight - boxHeight + padding + fontSize;
+
+    // Draw debug text
+    context.fillText("FPS: " + fps, padding, baseY);
+    context.fillText(`Mouse X: ${mouse.x.toFixed(2)}`, padding, baseY + fontSize);
+    context.fillText(`Mouse Y: ${mouse.y.toFixed(2)}`, padding, baseY + fontSize * 2);
+    context.fillText(`Draws/frame: ${draws}`, padding, baseY + fontSize * 3);
+
+    context.restore(); // Restore the context state
 }
 
-function createCanvas(h, w) {
+function createCanvas(width, height) {
     const canvas = document.createElement("canvas");
-    canvas.width = h;
-    canvas.height = w;
+    canvas.width = width;
+    canvas.height = height;
     document.body.insertBefore(canvas, document.body.childNodes[0]);
     return canvas;
 }
 
 function checkArgsOrThrow(fname, args) {
     for (let i = 0; i < args.length - 1; i++) {
-        if (!args[i] && args[i] !== 0) 
-            throw new Error(`${fname}: Argument ${i} is undefined or null.`);
+        if (args[i] === undefined || args[i] === null) throw new Error(`${fname}: Argument ${i} is undefined or null.`);
     }
 }

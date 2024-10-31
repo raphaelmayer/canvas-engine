@@ -73,8 +73,8 @@
         });
 
         // draw mouse
-        const x = Math.floor(game.mouse.x / game.pixelSize);
-        const y = Math.floor(game.mouse.y / game.pixelSize);
+        const x = Math.floor(game.mouse.x);
+        const y = Math.floor(game.mouse.y);
         game.drawRect(x, y, 1, 1, { color: "skyblue" });
 
         game.drawText(`Generation ${numGenerations}`, 0, 0, 14, { color: "black" });
